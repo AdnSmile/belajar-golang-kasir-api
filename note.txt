@@ -1,0 +1,3 @@
+go mod init kasir-api -> buat bikin initiasi project go
+go run main.go -> buat run file go nya
+go build
