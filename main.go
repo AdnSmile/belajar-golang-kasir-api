@@ -15,19 +15,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-type Produk struct {
-	ID    int    `json:"id"`
-	Nama  string `json:"nama"`
-	Harga int    `json:"harga"`
-	Stok  int    `json:"stok"`
-}
-
-var produk = []Produk{
-	{ID: 1, Nama: "Indomie Godog", Harga: 3500, Stok: 10},
-	{ID: 2, Nama: "Vit 1000ml", Harga: 3000, Stok: 40},
-	{ID: 3, Nama: "Kecap", Harga: 13000, Stok: 20},
-}
-
 type Config struct {
 	Port   string `mapstructure:"PORT"`
 	DBConn string `mapstructure:"DB_CONN"`
@@ -60,6 +47,10 @@ func main() {
 	productService := services.NewProductService(productRepo)
 	productHandler := handlers.NewProductHandler(productService)
 
+	categoryRepo := repositories.NewCategoryRepository(db)
+	categoryService := services.NewCategoryService(categoryRepo)
+	categoryHandler := handlers.NewCategoryHandler(categoryService)
+
 	// GET localhost:8080/api/produk/{id}
 	// PUT localhost:8080/api/produk/{id}
 	// DELETE localhost:8080/api/produk/{id}
@@ -68,6 +59,9 @@ func main() {
 	// GET localhost:8080/api/produk
 	// POST localhost:8080/api/produk
 	http.HandleFunc("/api/produk", productHandler.HandleProducts)
+
+	http.HandleFunc("/api/categories/", categoryHandler.HandleCategoryByID)
+	http.HandleFunc("/api/categories", categoryHandler.HandleCategories)
 
 	// localhost:8080/health
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -80,6 +74,8 @@ func main() {
 		})
 
 	})
+
+	http.HandleFunc("/", productHandler.Handler)
 
 	addr := "0.0.0.0:" + config.Port
 	fmt.Println("Server running di", addr)

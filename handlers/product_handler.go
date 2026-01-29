@@ -32,6 +32,31 @@ func (h *ProductHandler) HandleProducts(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
+func (h *ProductHandler) Handler(w http.ResponseWriter, r *http.Request) {
+	response := models.APIResponse{
+		Products: map[string]string{
+			"DELETE /api/produk/:id": "delete product",
+			"POST   /api/produk":     "create product",
+			"PUT    /api/produk/:id": "update product",
+			"GET    /api/produk":     "list all product",
+			"GET    /api/produk/:id": "get product by id",
+			"GET    /health":         "health check",
+		},
+		Categories: map[string]string{
+			"DELETE /api/categories/:id": "delete category",
+			"POST   /api/categories":     "create category",
+			"PUT    /api/categories/:id": "update category",
+			"GET    /api/categories":     "list all categories",
+			"GET    /api/categories/:id": "get category",
+		},
+		Environment: "production",
+		Message:     "API endpoints",
+		Version:     "v1.0.0",
+	}
+
+	json.NewEncoder(w).Encode(response)
+}
+
 func (h *ProductHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	products, err := h.service.GetAll()
