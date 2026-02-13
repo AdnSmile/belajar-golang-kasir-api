@@ -59,7 +59,9 @@ func (h *ProductHandler) Handler(w http.ResponseWriter, r *http.Request) {
 
 func (h *ProductHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 
-	products, err := h.service.GetAll()
+	name := r.URL.Query().Get("name")
+
+	products, err := h.service.GetAll(name)
 	if err != nil {
 		respondWithJSON(w, http.StatusInternalServerError, map[string]string{
 			"message": err.Error(),
