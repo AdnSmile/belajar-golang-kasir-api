@@ -85,6 +85,7 @@ func (repo *TransactionRepository) CreateTransaction(items []models.CheckoutItem
 		)
 	}
 
+	// bulk insert
 	query := fmt.Sprintf(`
 		INSERT INTO transaction_details
 		(transaction_id, product_id, quantity, subtotal)
@@ -105,4 +106,48 @@ func (repo *TransactionRepository) CreateTransaction(items []models.CheckoutItem
 		TotalAmount: totalAmount,
 		Details:     details,
 	}, nil
+}
+
+func (repo *TransactionRepository) GetTodaySalesSummary() (*models.SalesSummaryResponse, error) {
+
+	var summary models.SalesSummaryResponse
+
+	err := repo.db.QueryRow(`
+		SELECT
+		    COALESCE(SUM(total_amount), 0),
+		    COUNT(*)
+		FROM transactions
+		WHERE DATE(created_at) = CURRENT_DATE
+	`).Scan(&summary.TotalRevenue, &summary.TotalTransaction)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = repo.db.QueryRow(`
+		SELECT
+		    p.name,
+		    COALESCE(SUM(td.quantity), 0) as qty_sold
+		FROM transaction_details td
+		JOIN transactions t ON t.id = td.transaction_id
+		JOIN products p ON p.id = td.product_id
+		WHERE DATE(t.created_at) = CURRENT_DATE
+		GROUP BY p.id, p.name
+		ORDER BY qty_sold DESC
+		LIMIT 1
+	`).Scan(
+		&summary.BestSellerProduct.Name,
+		&summary.BestSellerProduct.QntSold,
+	)
+
+	if err == sql.ErrNoRows {
+		summary.BestSellerProduct = models.BestSellerProduct{}
+		return &summary, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &summary, nil
 }
